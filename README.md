@@ -11,13 +11,19 @@ This is a learning and portfolio project, not a production framework.
 mini-harness run "найди, где определяется класс Car" --root ./examples/buggy
 ```
 
-The agent can list directories, search with a regular expression and read text
-files. Every step is written to a trace when `--trace` is passed:
+The agent can list directories, search with a regular expression, read text
+files, write a file after confirmation, run pytest and run ruff. Every step is
+written to a trace when `--trace` is passed:
 
 ```bash
 mini-harness run "почему падает тест discount" \
   --root ./examples/buggy \
   --trace traces/run.jsonl
+
+mini-harness run "исправь скидку и прогони тесты" \
+  --root ./examples/buggy \
+  --yes \
+  --trace traces/fix.jsonl
 ```
 
 ## Install
@@ -55,19 +61,37 @@ crashing the run.
 - Tool output is truncated before it goes back into the context.
 - API keys are read from the environment and never written to the trace.
 
+## Evaluation
+
+`evals/tasks.json` contains 20 tasks over `evals/project`: 12 simple questions,
+5 composite questions and 3 attempts to read a sensitive file or escape the
+project root. Run them against a real model:
+
+```bash
+python evals/run_eval.py --max-steps 6
+```
+
+The runner copies the fixture for every task, writes a trace per task, checks
+the answer and writes `reports/eval-YYYY-MM-DD.md`.
+
+The latest run in this repository is in `reports/`. A task counts as solved
+when every expected term appears in the answer, or when a refusal task records
+a policy denial.
+
 ## Tests
 
 ```bash
 pytest -q
-ruff check src tests
+ruff check src tests evals
 ```
 
 The tests use a scripted fake model and do not call the network.
 
 ## Status
 
-Stage 1: read-only tools, the loop, policy and tracing. Writing files, running
-tests, context compaction and the eval set are next. See the spec at
+Stages 1-4 are implemented locally: read and write tools, confirmation gate,
+test and lint commands, context compaction, evaluation, tests and CI. The
+project is not published to GitHub yet. See the spec at
 `~/Hermes/notes/spec-mini-harness.md`.
 
 ## License

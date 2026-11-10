@@ -32,3 +32,28 @@ def system_prompt(root: Path, extra: str = "") -> str:
     if extra:
         base += f"\n\n{extra}"
     return base
+
+
+def compact_messages(
+    messages: list[dict[str, object]],
+    *,
+    max_chars: int = 24_000,
+    keep_last: int = 6,
+) -> list[dict[str, object]]:
+    """Replace old tool output with a short marker when the context grows too large."""
+    if sum(len(str(message.get("content", ""))) for message in messages) <= max_chars:
+        return messages
+
+    compacted: list[dict[str, object]] = []
+    cutoff = max(1, len(messages) - keep_last)
+    for index, message in enumerate(messages):
+        content = str(message.get("content", ""))
+        if index > 0 and index < cutoff and message.get("role") in {"tool", "assistant"}:
+            compacted.append({**message, "content": f"[compacted: {len(content)} chars]"})
+        else:
+            compacted.append(message)
+    return compacted
+
+
+def context_size(messages: list[dict[str, object]]) -> int:
+    return sum(len(str(message.get("content", ""))) for message in messages)

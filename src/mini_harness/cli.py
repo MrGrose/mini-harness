@@ -11,6 +11,7 @@ from mini_harness.loop import AgentLoop
 from mini_harness.policy import PolicyError, ProjectPolicy
 from mini_harness.tools.base import ToolRegistry
 from mini_harness.tools.fs import build_fs_tools
+from mini_harness.tools.project import build_project_tools
 from mini_harness.trace import TraceWriter
 
 
@@ -23,6 +24,18 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--root", default=".", help="project root (default: current directory)")
     run.add_argument("--max-steps", type=int, default=int(os.getenv("MINI_HARNESS_MAX_STEPS", "8")))
     run.add_argument("--trace", default=None, help="path to a JSONL trace file")
+    run.add_argument(
+        "-y",
+        "--yes",
+        action="store_true",
+        help="approve write_file without an interactive prompt",
+    )
+    run.add_argument(
+        "--max-context-chars",
+        type=int,
+        default=24_000,
+        help="compact old tool output above this size",
+    )
     run.add_argument("--model", default=os.getenv("MINI_HARNESS_MODEL", "deepseek-chat"))
     run.add_argument(
         "--base-url",
@@ -66,10 +79,27 @@ def main(argv: list[str] | None = None) -> int:
         print(str(exc), file=sys.stderr)
         return 2
 
-    registry = ToolRegistry()
-    for tool in build_fs_tools(policy):
+    def confirm(tool, tool_args: dict[str, object]) -> bool:
+        if args.yes:
+            return True
+        if not sys.stdin.isatty():
+            print(f"DENIED {tool.name}: use --yes in non-interactive mode", file=sys.stderr)
+            return False
+        target = tool_args.get("path", "")
+        print(f"\nАгент хочет выполнить {tool.name}: {target}")
+        answer = input("Разрешить? [y/N] ").strip().lower()
+        return answer in {"y", "yes", "да"}
+
+    registry = ToolRegistry(confirm=confirm)
+    for tool in [*build_fs_tools(policy), *build_project_tools(policy)]:
         registry.register(tool)
-    loop = AgentLoop(model=model, registry=registry, trace=trace, max_steps=args.max_steps)
+    loop = AgentLoop(
+        model=model,
+        registry=registry,
+        trace=trace,
+        max_steps=args.max_steps,
+        max_context_chars=args.max_context_chars,
+    )
     result = loop.run(args.task, str(policy.root))
 
     if result.stopped_reason == "final":

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import ClassVar
 
 DENIED_NAMES = {".env", ".git", "id_rsa", "id_ed25519"}
 DENIED_SUFFIXES = {".pem", ".key", ".p12"}
@@ -36,3 +37,44 @@ class ProjectPolicy:
 
     def relative(self, path: Path) -> str:
         return str(path.relative_to(self.root))
+
+
+class CommandPolicy:
+    """Allow only the fixed test and lint commands, never a user supplied shell line."""
+
+    ALLOWED_EXECUTABLES: ClassVar[set[str]] = {"python", "python3", "pytest", "ruff"}
+    FORBIDDEN_TOKENS: ClassVar[set[str]] = {
+        "rm",
+        "sudo",
+        "curl",
+        "wget",
+        "git",
+        "bash",
+        "sh",
+        "zsh",
+        "powershell",
+        "cmd",
+    }
+    SHELL_CHARS: ClassVar[set[str]] = set(";|&><`$()")
+
+    def check(self, argv: list[str]) -> None:
+        if not argv:
+            raise PolicyError("empty command")
+        executable = Path(argv[0]).name.lower()
+        if executable not in self.ALLOWED_EXECUTABLES and not executable.startswith("python"):
+            raise PolicyError(f"executable is not allowed: {argv[0]}")
+        for token in argv[1:]:
+            if token in self.FORBIDDEN_TOKENS:
+                raise PolicyError(f"forbidden command token: {token}")
+            if any(char in token for char in self.SHELL_CHARS):
+                raise PolicyError(f"shell metacharacters are not allowed: {token}")
+
+    def test_command(self) -> list[str]:
+        import sys
+
+        return [sys.executable, "-m", "pytest", "-q"]
+
+    def lint_command(self) -> list[str]:
+        import sys
+
+        return [sys.executable, "-m", "ruff", "check", "."]
