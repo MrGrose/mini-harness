@@ -1,5 +1,7 @@
 # mini-harness
 
+[![CI](https://github.com/MrGrose/mini-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/MrGrose/mini-harness/actions/workflows/ci.yml)
+
 A small, readable agent harness: the loop, tool registry, path policy, JSONL
 trace and tests that turn a chat model into a coding agent.
 
@@ -89,9 +91,9 @@ The tests use a scripted fake model and do not call the network.
 
 ## Status
 
-Stages 1-4 are implemented locally: read and write tools, confirmation gate,
-test and lint commands, context compaction, evaluation, tests and CI. The
-project is not published to GitHub yet. See the spec at
+Stages 1-4 are implemented: read and write tools, confirmation gate, test and
+lint commands, context compaction, evaluation, tests and CI. The project is
+published at https://github.com/MrGrose/mini-harness. See the spec at
 `~/Hermes/notes/spec-mini-harness.md`.
 
 ## License
