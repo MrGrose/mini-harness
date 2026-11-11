@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 from pathlib import Path
 
@@ -40,7 +39,6 @@ def compact_messages(
     max_chars: int = 24_000,
     keep_last: int = 6,
 ) -> list[dict[str, object]]:
-    """Replace old tool output with a short marker when the context grows too large."""
     if sum(len(str(message.get("content", ""))) for message in messages) <= max_chars:
         return messages
 

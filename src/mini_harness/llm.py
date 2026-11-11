@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 import json
 import time
@@ -22,7 +21,7 @@ class ModelReply:
 
 class ModelClient(Protocol):
     def complete(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]]) -> ModelReply:
-        """Return the next assistant reply for the given messages."""
+        ...
 
 
 class ModelError(RuntimeError):
@@ -95,7 +94,6 @@ class OpenAICompatibleClient:
 
 
 def tool_call_message(reply: ModelReply) -> dict[str, Any]:
-    """Convert a model reply into the assistant message format expected by the API."""
     message: dict[str, Any] = {"role": "assistant", "content": reply.content or ""}
     if reply.tool_calls:
         message["tool_calls"] = [
