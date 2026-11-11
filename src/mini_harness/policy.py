@@ -11,7 +11,6 @@ class PolicyError(PermissionError):
 
 
 class ProjectPolicy:
-    """Resolve paths inside one project root and refuse sensitive files."""
 
     def __init__(self, root: str | Path) -> None:
         self.root = Path(root).expanduser().resolve()
@@ -39,7 +38,6 @@ class ProjectPolicy:
 
 
 class CommandPolicy:
-    """Allow only the fixed test and lint commands, never a user supplied shell line."""
 
     ALLOWED_EXECUTABLES: ClassVar[set[str]] = {"python", "python3", "pytest", "ruff"}
     FORBIDDEN_TOKENS: ClassVar[set[str]] = {

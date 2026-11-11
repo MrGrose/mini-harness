@@ -29,7 +29,6 @@ class ModelError(RuntimeError):
 
 
 class OpenAICompatibleClient:
-    """Thin wrapper around the OpenAI chat completions API with simple retries."""
 
     def __init__(
         self,
