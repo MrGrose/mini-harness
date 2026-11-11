@@ -5,6 +5,8 @@
 A small, readable agent harness: the loop, tool registry, path policy, JSONL
 trace and tests that turn a chat model into a coding agent.
 
+![mini-harness live run](docs/assets/mini-harness-run.gif)
+
 This is a learning and portfolio project, not a production framework.
 
 ## What it does
